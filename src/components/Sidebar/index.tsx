@@ -143,7 +143,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
                       fill=""
                     />
                   </svg>
-                  Profile
+                  Presets
                 </NavLink>
               </li>
               {/* <!-- Menu Item Profile --> */}

@@ -37,7 +37,11 @@ const FFTGraph: React.FC<Props> = ({ samples, bins = 128 }) => {
   const opts = useMemo(() => ({
     chart: { id: 'fft', toolbar: { show: false } },
     xaxis: { tickAmount: 6, labels: { formatter: (v: number) => `${v}` } },
-    yaxis: { labels: { formatter: (v: number) => v.toFixed(3) } },
+    yaxis: { 
+      min: 'auto',
+      max: 'auto',
+      labels: { formatter: (v: number) => v.toFixed(3) } 
+    },
     colors: ['#f97316'],
     grid: { show: true },
     stroke: { curve: 'smooth' },

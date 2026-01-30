@@ -1,7 +1,69 @@
+import { useState, useEffect } from 'react';
 import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
 import userThree from '../images/user/user-03.png';
+import { useAuth } from '../hooks/useAuth';
+import useLocalStorage from '../hooks/useLocalStorage';
 
 const Settings = () => {
+  const { user, updateUserProfile } = useAuth();
+  const [userSettings, setUserSettings] = useLocalStorage<{
+    fullName: string;
+    phoneNumber: string;
+    email: string;
+    username: string;
+    bio: string;
+  }>('user.settings', {
+    fullName: '',
+    phoneNumber: '',
+    email: '',
+    username: '',
+    bio: '',
+  });
+
+  const [fullName, setFullName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [bio, setBio] = useState('');
+
+  // Initialize form with stored settings or user info
+  useEffect(() => {
+    if (userSettings.fullName) {
+      setFullName(userSettings.fullName);
+      setPhoneNumber(userSettings.phoneNumber);
+      setEmail(userSettings.email);
+      setUsername(userSettings.username);
+      setBio(userSettings.bio);
+    } else if (user) {
+      setFullName(user.name);
+      setEmail(user.email);
+      setUsername(user.name.toLowerCase());
+    }
+  }, [user, userSettings]);
+
+  const handleSave = () => {
+    // Update both localStorage settings and auth user
+    const updatedProfile = {
+      fullName,
+      phoneNumber,
+      email,
+      username,
+      bio,
+    };
+    setUserSettings(updatedProfile);
+    
+    // Sync with auth.user so header updates
+    if (updateUserProfile) {
+      updateUserProfile({
+        name: fullName,
+        phone: phoneNumber,
+        email: email,
+        username: username,
+        bio: bio,
+      });
+    }
+  };
+
   return (
     <>
       <div className="mx-auto max-w-270">
@@ -56,8 +118,9 @@ const Settings = () => {
                           type="text"
                           name="fullName"
                           id="fullName"
-                          placeholder="Devid Jhon"
-                          defaultValue="Devid Jhon"
+                          placeholder="Enter your full name"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
                         />
                       </div>
                     </div>
@@ -74,8 +137,9 @@ const Settings = () => {
                         type="text"
                         name="phoneNumber"
                         id="phoneNumber"
-                        placeholder="+990 3343 7865"
-                        defaultValue="+990 3343 7865"
+                        placeholder="Enter your phone number"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
                       />
                     </div>
                   </div>
@@ -118,8 +182,9 @@ const Settings = () => {
                         type="email"
                         name="emailAddress"
                         id="emailAddress"
-                        placeholder="devidjond45@gmail.com"
-                        defaultValue="devidjond45@gmail.com"
+                        placeholder="Enter your email address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                       />
                     </div>
                   </div>
@@ -136,8 +201,9 @@ const Settings = () => {
                       type="text"
                       name="Username"
                       id="Username"
-                      placeholder="devidjhon24"
-                      defaultValue="devidjhon24"
+                      placeholder="Enter your username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
                     />
                   </div>
 
@@ -186,7 +252,8 @@ const Settings = () => {
                         id="bio"
                         rows={6}
                         placeholder="Write your bio here"
-                        defaultValue="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque posuere fermentum urna, eu condimentum mauris tempus ut. Donec fermentum blandit aliquet."
+                        value={bio}
+                        onChange={(e) => setBio(e.target.value)}
                       ></textarea>
                     </div>
                   </div>
@@ -194,13 +261,29 @@ const Settings = () => {
                   <div className="flex justify-end gap-4.5">
                     <button
                       className="flex justify-center rounded border border-stroke py-2 px-6 font-medium text-black hover:shadow-1 dark:border-strokedark dark:text-white"
-                      type="submit"
+                      type="button"
+                      onClick={() => {
+                        if (userSettings.fullName) {
+                          setFullName(userSettings.fullName);
+                          setPhoneNumber(userSettings.phoneNumber);
+                          setEmail(userSettings.email);
+                          setUsername(userSettings.username);
+                          setBio(userSettings.bio);
+                        } else if (user) {
+                          setFullName(user.name);
+                          setEmail(user.email);
+                          setUsername(user.name.toLowerCase());
+                          setPhoneNumber('');
+                          setBio('');
+                        }
+                      }}
                     >
                       Cancel
                     </button>
                     <button
                       className="flex justify-center rounded bg-primary py-2 px-6 font-medium text-gray hover:bg-opacity-90"
-                      type="submit"
+                      type="button"
+                      onClick={handleSave}
                     >
                       Save
                     </button>

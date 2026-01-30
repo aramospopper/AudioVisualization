@@ -5,24 +5,12 @@ interface Props {
   setSensitivity: (v: number) => void;
   ledBrightness: number;
   setLedBrightness: (v: number) => void;
-  connected: boolean;
-  onConnect: () => void;
-  onDisconnect: () => void;
 }
 
-const Controls: React.FC<Props> = ({ sensitivity, setSensitivity, ledBrightness, setLedBrightness, connected, onConnect, onDisconnect }) => {
+const Controls: React.FC<Props> = ({ sensitivity, setSensitivity, ledBrightness, setLedBrightness }) => {
   return (
     <div className="col-span-12 bg-white dark:bg-boxdark p-4 rounded-md shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-medium">Controls</h3>
-        <div>
-          {!connected ? (
-            <button className="btn btn-primary" onClick={onConnect}>Pair device</button>
-          ) : (
-            <button className="btn btn-ghost" onClick={onDisconnect}>Disconnect</button>
-          )}
-        </div>
-      </div>
+      <h3 className="font-medium mb-4">Controls</h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>

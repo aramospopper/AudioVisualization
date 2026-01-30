@@ -16,8 +16,8 @@ interface Widget {
   position: number;
 }
 
-const Chart: React.FC = () => {
-  const { connect, disconnect, connected, lastLeft, lastRight, send, error, setOnRaw } = useBLE();
+const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) => {
+  const { connect, disconnect, connected, lastLeft, lastRight, send, error, setOnRaw } = bleHook;
 
   // persisted UI states
   const [sensitivity, setSensitivity] = useLocalStorage<number>('av.sensitivity', 50);
@@ -91,7 +91,7 @@ const Chart: React.FC = () => {
 
   // Define widget components
   const widgetComponents: Record<string, JSX.Element> = {
-    'live-wave': <LiveWave left={lastLeft} right={lastRight} points={1024} />,
+    'live-wave': <LiveWave left={lastLeft} right={lastRight} points={32} />,
     'fft-graph': (
       <div className="col-span-12">
         <FFTGraph samples={fftSamples} bins={128} />
@@ -120,9 +120,6 @@ const Chart: React.FC = () => {
           setSensitivity={setSensitivity}
           ledBrightness={ledBrightness}
           setLedBrightness={setLedBrightness}
-          connected={connected}
-          onConnect={() => connect().catch(() => {})}
-          onDisconnect={() => disconnect().catch(() => {})}
         />
       </div>
     ),
@@ -133,7 +130,7 @@ const Chart: React.FC = () => {
 
   return (
     <>
-      <Breadcrumb pageName="AudioVisor — Live" />
+      <Breadcrumb pageName="AudioVisor" />
 
       <div className="grid grid-cols-12 gap-4 md:gap-6 2xl:gap-7.5">
         {sortedWidgets.map((widget) => (

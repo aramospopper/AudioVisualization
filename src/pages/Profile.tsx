@@ -122,14 +122,14 @@ const Profile = () => {
 
   return (
     <>
-      <Breadcrumb pageName="Audio Profiles" />
+      <Breadcrumb pageName="Audio Presets" />
 
       <div className="grid grid-cols-1 gap-6">
         {/* Active Profile Display */}
         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark">
             <h3 className="font-medium text-black dark:text-white">
-              Active Profile
+              Active Preset
             </h3>
           </div>
           <div className="p-6.5">
@@ -140,7 +140,7 @@ const Profile = () => {
                     <h4 className="text-xl font-semibold text-black dark:text-white mb-2">
                       {activeProfile.name}
                     </h4>
-                    <p className="text-sm text-bodydark">Currently active audio profile</p>
+                    <p className="text-sm text-bodydark">Currently active audio preset</p>
                   </div>
                   <div className="rounded-full bg-success px-4 py-2 text-sm font-medium text-white">
                     Active
@@ -158,7 +158,7 @@ const Profile = () => {
                 </div>
               </div>
             ) : (
-              <p className="text-bodydark">No active profile</p>
+              <p className="text-bodydark">No active preset</p>
             )}
           </div>
         </div>
@@ -167,7 +167,7 @@ const Profile = () => {
         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="border-b border-stroke py-4 px-6.5 dark:border-strokedark flex justify-between items-center">
             <h3 className="font-medium text-black dark:text-white">
-              All Profiles ({profiles.length})
+              All Presets ({profiles.length})
             </h3>
             {!showCreateForm && !editingProfile && (
               <button
@@ -177,7 +177,7 @@ const Profile = () => {
                 <svg className="fill-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M15 7H9V1C9 0.4 8.6 0 8 0C7.4 0 7 0.4 7 1V7H1C0.4 7 0 7.4 0 8C0 8.6 0.4 9 1 9H7V15C7 15.6 7.4 16 8 16C8.6 16 9 15.6 9 15V9H15C15.6 9 16 8.6 16 8C16 7.4 15.6 7 15 7Z"/>
                 </svg>
-                New Profile
+                New Preset
               </button>
             )}
           </div>
@@ -186,12 +186,12 @@ const Profile = () => {
             {(showCreateForm || editingProfile) && (
               <div className="mb-6 rounded-lg border-2 border-primary bg-gray p-6 dark:bg-meta-4">
                 <h4 className="mb-4 text-lg font-semibold text-black dark:text-white">
-                  {editingProfile ? 'Edit Profile' : 'Create New Profile'}
+                  {editingProfile ? 'Edit Preset' : 'Create New Preset'}
                 </h4>
                 <div className="space-y-4">
                   <div>
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Profile Name
+                      Preset Name
                     </label>
                     <input
                       type="text"
@@ -232,7 +232,7 @@ const Profile = () => {
                       onClick={editingProfile ? handleUpdateProfile : handleCreateProfile}
                       className="flex justify-center rounded bg-primary p-3 font-medium text-white hover:bg-opacity-90"
                     >
-                      {editingProfile ? 'Update' : 'Create'} Profile
+                      {editingProfile ? 'Update' : 'Create'} Preset
                     </button>
                     <button
                       onClick={cancelEdit}
