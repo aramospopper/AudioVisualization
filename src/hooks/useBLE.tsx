@@ -7,7 +7,8 @@ export function useBLE(opts?: {
   characteristicUuid?: string;
   parser?: ParserFn; // parse incoming notification DataView -> {left, right}
 }) {
-  const { serviceUuid = '', characteristicUuid = '', parser } = opts || {};
+  const { serviceUuid = '6e400001-b5a3-f393-e0a9-e50e24dcca9e', 
+	characteristicUuid = '6e400003-b5a3-f393-e0a9-e50e24dcca9e', parser } = opts || {};
   const deviceRef = useRef<any>(null);
   const charRef = useRef<any>(null);
   const [connected, setConnected] = useState(false);
@@ -17,24 +18,44 @@ export function useBLE(opts?: {
   const onRaw = useRef<((dv: DataView) => void) | null>(null);
 
   // default parser: 16-bit signed interleaved L,R little-endian
-  const defaultParser: ParserFn = (dv) => {
-    try {
-      const n = Math.floor(dv.byteLength / 2); // int16s
-      const outL: number[] = [];
-      const outR: number[] = [];
-      for (let i = 0; i + 1 < n; i += 2) {
-        const l = dv.getInt16(i * 2, true) / 32768; // normalize to -1..1
-        const r = dv.getInt16((i + 1) * 2, true) / 32768;
-        outL.push(l);
-        outR.push(r);
-      }
-      return { left: outL, right: outR };
-    } catch (e) {
-      return null;
-    }
+//   const defaultParser: ParserFn = (dv) => {
+//     try {
+//       const n = Math.floor(dv.byteLength / 2); // int16s
+//       const outL: number[] = [];
+//       const outR: number[] = [];
+//       for (let i = 0; i + 1 < n; i += 2) {
+//         const l = dv.getInt16(i * 2, true) / 32768; // normalize to -1..1
+//         const r = dv.getInt16((i + 1) * 2, true) / 32768;
+//         outL.push(l);
+//         outR.push(r);
+//       }
+//       return { left: outL, right: outR };
+//     } catch (e) {
+//       return null;
+//     }
+//   };
+
+  const binaryFloatParser: ParserFn = (dv) => {
+	// Check if we have at least 8 bytes (2 floats * 4 bytes)
+	if (dv.byteLength < 8) return null;
+  
+	try {
+	  // Read the first 4 bytes as a float
+	  const magL = dv.getFloat32(0, true); // true = Little Endian
+	  // Read the next 4 bytes (starting at offset 4)
+	  const magR = dv.getFloat32(4, true);
+  
+	  return { 
+		left: [magL], 
+		right: [magR] 
+	  };
+	} catch (e) {
+	  console.error("Binary parse error:", e);
+	  return null;
+	}
   };
 
-  const _parser = parser || defaultParser;
+  const _parser = parser || binaryFloatParser;
 
   const handleNotification = useCallback((ev: Event) => {
     try {
