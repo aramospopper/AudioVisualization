@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
-import LiveWave from '../components/Visor/LiveWave';
-import FFTGraph from '../components/Visor/FFTGraph';
-import Controls from '../components/Visor/Controls';
+import Breadcrumb from '../components/ui/Breadcrumbs/Breadcrumb';
+import LiveWave from '../features/visor/components/LiveWave';
+import FFTGraph from '../features/visor/components/FFTGraph';
+import Controls from '../features/visor/components/Controls';
 import { useBLE } from '../hooks/useBLE';
 import { useRollingAverage } from '../hooks/useRollingAverage';
 import useLocalStorage from '../hooks/useLocalStorage';

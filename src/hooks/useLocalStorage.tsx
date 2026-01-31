@@ -31,11 +31,35 @@ function useLocalStorage<T>(
           : storedValue;
       // Save state
       window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      window.dispatchEvent(new Event('local-storage'));
     } catch (error) {
       // A more advanced implementation would handle the error case
       console.log(error);
     }
   }, [key, storedValue]);
+
+  // Sync state across components and tabs
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent | Event) => {
+      if (event instanceof StorageEvent && event.key && event.key !== key) {
+        return;
+      }
+      try {
+        const item = window.localStorage.getItem(key);
+        setStoredValue(item ? JSON.parse(item) : initialValue);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('local-storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('local-storage', handleStorageChange);
+    };
+  }, [key, initialValue]);
 
   return [storedValue, setStoredValue];
 }

@@ -2,9 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter as Router } from 'react-router-dom';
 import App from './App';
-import './css/style.css';
-import './css/satoshi.css';
-import ErrorBoundary from './components/ErrorBoundary';
+import '../assets/css/style.css';
+import '../assets/css/satoshi.css';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 // Temporary visible mount badge to help debug a white screen (removed after debugging)
 if (!document.getElementById('av-debug-badge')) {

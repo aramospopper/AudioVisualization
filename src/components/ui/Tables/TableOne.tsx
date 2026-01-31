@@ -1,9 +1,9 @@
-import { BRAND } from '../../types/brand';
-import BrandOne from '../../images/brand/brand-01.svg';
-import BrandTwo from '../../images/brand/brand-02.svg';
-import BrandThree from '../../images/brand/brand-03.svg';
-import BrandFour from '../../images/brand/brand-04.svg';
-import BrandFive from '../../images/brand/brand-05.svg';
+import { Product } from '../../../types/product';
+import BrandOne from '../../../assets/images/brand/brand-01.svg';
+import BrandTwo from '../../../assets/images/brand/brand-02.svg';
+import BrandThree from '../../../assets/images/brand/brand-03.svg';
+import BrandFour from '../../../assets/images/brand/brand-04.svg';
+import BrandFive from '../../../assets/images/brand/brand-05.svg';
 
 const brandData: BRAND[] = [
   {

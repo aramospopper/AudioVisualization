@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import Breadcrumb from '../components/Breadcrumbs/Breadcrumb';
+import Breadcrumb from '../components/ui/Breadcrumbs/Breadcrumb';
 
 interface Widget {
   id: string;

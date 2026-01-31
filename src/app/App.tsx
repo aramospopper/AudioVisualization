@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react';
 import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 
-import Loader from './common/Loader';
-import PageTitle from './components/PageTitle';
-import Chart from './pages/Chart';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import FormElements from './pages/Form/FormElements';
-import FormLayout from './pages/Form/FormLayout';
-import DashboardCustomizer from './pages/DashboardCustomizer';
-import SignIn from './pages/Authentication/SignIn';
-import SignUp from './pages/Authentication/SignUp';
-import DefaultLayout from './layout/DefaultLayout';
-import { useBLE } from './hooks/useBLE';
-import { useAuth } from './hooks/useAuth';
+import Loader from '../components/common/Loader';
+import PageTitle from '../components/ui/PageTitle';
+import ProtectedRoute from '../features/auth/components/ProtectedRoute';
+import Chart from '../pages/Chart';
+import Profile from '../pages/Profile';
+import Settings from '../pages/Settings';
+import FormElements from '../pages/Form/FormElements';
+import FormLayout from '../pages/Form/FormLayout';
+import DashboardCustomizer from '../pages/DashboardCustomizer';
+import SignIn from '../features/auth/components/SignIn';
+import SignUp from '../features/auth/components/SignUp';
+import DefaultLayout from '../components/layout/DefaultLayout';
+import { useBLE } from '../hooks/useBLE';
+import { useAuth } from '../features/auth/hooks/useAuth';
 
 function App() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -75,7 +76,7 @@ function App() {
       <Route
         path="/*"
         element={
-          isAuthenticated ? (
+          <ProtectedRoute>
             <DefaultLayout
               bleConnected={bleHook.connected}
               onBleConnect={() => bleHook.connect().catch(() => {})}
@@ -92,7 +93,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/profile"
+                  path="profile"
                   element={
                     <>
                       <PageTitle title="Profile | AudioVisor" />
@@ -101,7 +102,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/forms/form-elements"
+                  path="forms/form-elements"
                   element={
                     <>
                       <PageTitle title="Form Elements | AudioVisor" />
@@ -110,7 +111,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/forms/form-layout"
+                  path="forms/form-layout"
                   element={
                     <>
                       <PageTitle title="Form Layout | AudioVisor" />
@@ -119,7 +120,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/settings"
+                  path="settings"
                   element={
                     <>
                       <PageTitle title="Settings | AudioVisor" />
@@ -128,7 +129,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="/customize"
+                  path="customize"
                   element={
                     <>
                       <PageTitle title="Customize Dashboard | AudioVisor" />
@@ -139,9 +140,7 @@ function App() {
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </DefaultLayout>
-          ) : (
-            <Navigate to="/auth/signin" replace />
-          )
+          </ProtectedRoute>
         }
       />
     </Routes>

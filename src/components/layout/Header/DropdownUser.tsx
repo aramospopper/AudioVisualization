@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import ClickOutside from '../ClickOutside';
-import { useAuth } from '../../hooks/useAuth';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import ClickOutside from '../../common/ClickOutside';
+import { useAuth } from '../../../features/auth/hooks/useAuth';
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -17,11 +17,10 @@ const DropdownUser = () => {
         .slice(0, 2);
     };
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   const handleLogout = () => {
+    setDropdownOpen(false);
     logout();
-    navigate('/auth/signin');
   };
 
   return (

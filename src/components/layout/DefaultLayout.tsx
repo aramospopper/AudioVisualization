@@ -1,6 +1,6 @@
 import React, { useState, ReactNode } from 'react';
-import Header from '../components/Header/index';
-import Sidebar from '../components/Sidebar/index';
+import Header from './Header/index';
+import Sidebar from './Sidebar/index';
 
 const DefaultLayout: React.FC<{ 
   children: ReactNode;
