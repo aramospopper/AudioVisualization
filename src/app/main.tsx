@@ -5,7 +5,7 @@ import App from './App';
 import '../assets/css/style.css';
 import '../assets/css/satoshi.css';
 import ErrorBoundary from '../components/common/ErrorBoundary';
-
+import { SpeedInsights } from "@vercel/speed-insights/next"
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
     <ErrorBoundary>
