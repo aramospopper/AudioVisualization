@@ -6,9 +6,9 @@ import DarkModeSwitcher from './DarkModeSwitcher';
 const Header = (props: {
   sidebarOpen: string | boolean | undefined;
   setSidebarOpen: (arg0: boolean) => void;
-  connected?: boolean;
-  onConnect?: () => void;
-  onDisconnect?: () => void;
+  connectedDevices?: Array<{ id: string; type: string }>;
+  onPairLR?: () => void;
+  onPairUD?: () => void;
 }) => {
   return (
     <header className="sticky top-0 z-999 flex w-full bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
@@ -66,33 +66,34 @@ const Header = (props: {
 
         <div className="flex items-center gap-3 2xsm:gap-7">
           <ul className="flex items-center gap-2 2xsm:gap-4">
-            {/* <!-- BLE Connection --> */}
-            {props.onConnect && props.onDisconnect && (
-              <li>
-                {!props.connected ? (
+            {/* <!-- BLE Pair Buttons --> */}
+            {props.onPairLR && props.onPairUD && (
+              <>
+                <li>
                   <button 
-                    onClick={props.onConnect}
-                    className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+                    onClick={props.onPairLR}
+                    className="flex items-center gap-2 rounded-md bg-teal-500 px-4 py-2 text-sm font-medium text-white hover:bg-teal-600"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                     </svg>
-                    Pair Device
+                    Pair L/R
                   </button>
-                ) : (
+                </li>
+                <li>
                   <button 
-                    onClick={props.onDisconnect}
-                    className="flex items-center gap-2 rounded-md bg-meta-3 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+                    onClick={props.onPairUD}
+                    className="flex items-center gap-2 rounded-md bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600"
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z" />
                     </svg>
-                    Connected
+                    Pair Up/Behind
                   </button>
-                )}
-              </li>
+                </li>
+              </>
             )}
-            {/* <!-- BLE Connection --> */}
+            {/* <!-- BLE Pair Buttons --> */}
             
             {/* <!-- Dark Mode Toggler --> */}
             <DarkModeSwitcher />

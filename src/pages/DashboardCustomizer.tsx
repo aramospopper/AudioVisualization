@@ -9,10 +9,12 @@ interface Widget {
 
 const DashboardCustomizer = () => {
   const defaultWidgets: Widget[] = [
-    { id: 'live-wave', name: 'Live Waveform', position: 0 },
-    { id: 'fft-graph', name: 'FFT Graph', position: 1 },
-    { id: 'stats', name: 'Statistics (Avg. From Last 10 Min)', position: 2 },
-    { id: 'controls', name: 'Controls', position: 3 },
+    { id: 'device-manager', name: 'Device Manager', position: 0 },
+    { id: 'live-wave', name: 'Live Waveform (L/R)', position: 1 },
+    { id: 'live-wave-ud', name: 'Live Waveform (U/B)', position: 2 },
+    { id: 'fft-graph', name: 'FFT Graph', position: 3 },
+    { id: 'stats', name: 'Statistics (Avg. From Last 10 Min)', position: 4 },
+    { id: 'controls', name: 'Controls', position: 5 },
   ];
 
   const [widgets, setWidgets] = useState<Widget[]>(() => {

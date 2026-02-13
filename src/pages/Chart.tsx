@@ -3,6 +3,8 @@ import Breadcrumb from '../components/ui/Breadcrumbs/Breadcrumb';
 import LiveWave from '../features/visor/components/LiveWave';
 import FFTGraph from '../features/visor/components/FFTGraph';
 import Controls from '../features/visor/components/Controls';
+import DirectionalGraphs from '../features/visor/components/DirectionalGraphs';
+import DeviceManager from '../features/visor/components/DeviceManager';
 import { useBLE } from '../hooks/useBLE';
 import { useRollingAverage } from '../hooks/useRollingAverage';
 import useLocalStorage from '../hooks/useLocalStorage';
@@ -17,7 +19,15 @@ interface Widget {
 }
 
 const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) => {
-  const { connect, disconnect, connected, lastLeft, lastRight, send, error, setOnRaw } = bleHook;
+  const { connect, disconnect, connectedDevices, lastLeft, lastRight, lastUp, lastDown, send, error, setOnRaw } = bleHook;
+  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
+
+  // Auto-select first device when connected
+  useEffect(() => {
+    if (connectedDevices.length > 0 && !selectedDevice) {
+      setSelectedDevice(connectedDevices[0].id);
+    }
+  }, [connectedDevices]);
 
   // persisted UI states
   const [sensitivity, setSensitivity] = useLocalStorage<number>('av.sensitivity', 50);
@@ -27,10 +37,12 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
   const [widgetLayout, setWidgetLayout] = useState<Widget[]>(() => {
     const saved = localStorage.getItem('dashboard-layout');
     return saved ? JSON.parse(saved) : [
-      { id: 'live-wave', name: 'Live Waveform', position: 0 },
-      { id: 'fft-graph', name: 'FFT Graph', position: 1 },
-      { id: 'stats', name: 'Statistics', position: 2 },
-      { id: 'controls', name: 'Controls', position: 3 },
+      { id: 'device-manager', name: 'Device Manager', position: 0 },
+      { id: 'live-wave', name: 'Live Waveform (L/R)', position: 1 },
+      { id: 'live-wave-ud', name: 'Live Waveform (Up/Down)', position: 2 },
+      { id: 'fft-graph', name: 'FFT Graph', position: 3 },
+      { id: 'stats', name: 'Statistics', position: 4 },
+      { id: 'controls', name: 'Controls', position: 5 },
     ];
   });
 
@@ -49,12 +61,19 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
   const rolling = useRollingAverage(10 * 60 * 1000);
   const [latestRms, setLatestRms] = useState(0);
 
+  // Get data for the selected device
+  const currentDevice = selectedDevice || connectedDevices[0];
+  const deviceLeft = currentDevice ? (lastLeft[currentDevice] || []) : [];
+  const deviceRight = currentDevice ? (lastRight[currentDevice] || []) : [];
+  const deviceUp = currentDevice ? (lastUp[currentDevice] || []) : [];
+  const deviceDown = currentDevice ? (lastDown[currentDevice] || []) : [];
+
   // derive a single-channel view for FFT (use left if available)
-  const fftSamples = useMemo(() => (lastLeft && lastLeft.length ? lastLeft : lastRight || []), [lastLeft, lastRight]);
+  const fftSamples = useMemo(() => (deviceLeft && deviceLeft.length ? deviceLeft : deviceRight || []), [deviceLeft, deviceRight]);
 
   // compute RMS from recent samples and push into rolling buffer
   useEffect(() => {
-    const arr = lastLeft && lastLeft.length ? lastLeft : lastRight;
+    const arr = deviceLeft && deviceLeft.length ? deviceLeft : deviceRight;
     if (!arr || !arr.length) return;
     // apply sensitivity (simple scale)
     const scale = Math.max(0.001, sensitivity / 50); // default ~1
@@ -63,7 +82,7 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
     setLatestRms(rms);
     // store raw RMS (not dB) — conversion shown in UI
     rolling.push(rms);
-  }, [lastLeft, lastRight, sensitivity, rolling]);
+  }, [deviceLeft, deviceRight, sensitivity, rolling]);
 
   const avgRms = rolling.average();
   const rmsToDb = (r: number) => (r <= 0 ? -Infinity : 20 * Math.log10(r));
@@ -72,15 +91,15 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
   useEffect(() => {
     // send LED brightness as [0x10, <brightness>]
     const cmd = new Uint8Array([0x10, Math.max(0, Math.min(255, ledBrightness))]);
-    send(cmd).catch(() => {});
+    send(cmd, currentDevice).catch(() => {});
     // debounce/TTL would be better for rapid sliders in production
-  }, [ledBrightness, send]);
+  }, [ledBrightness, send, currentDevice]);
 
   useEffect(() => {
     // sensitivity sent as [0x11, <0-100>]
     const cmd = new Uint8Array([0x11, Math.max(0, Math.min(100, sensitivity))]);
-    send(cmd).catch(() => {});
-  }, [sensitivity, send]);
+    send(cmd, currentDevice).catch(() => {});
+  }, [sensitivity, send, currentDevice]);
 
   // optional: expose raw DataView for debugging
   useEffect(() => {
@@ -91,7 +110,28 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
 
   // Define widget components
   const widgetComponents: Record<string, JSX.Element> = {
-    'live-wave': <LiveWave left={lastLeft} right={lastRight} points={32} />,
+    'device-manager': (
+      <div className="col-span-12">
+        <DeviceManager
+          connectedDevices={connectedDevices}
+          selectedDevice={selectedDevice}
+          onSelectDevice={setSelectedDevice}
+          onDisconnect={(deviceId) => disconnect(deviceId).catch(() => {})}
+        />
+      </div>
+    ),
+    'live-wave': <LiveWave left={deviceLeft} right={deviceRight} points={32} label="L / R" leftLabel="Left" rightLabel="Right" />,
+    'live-wave-ud': <LiveWave left={deviceUp} right={deviceDown} points={32} label="U / B" leftLabel="Up" rightLabel="Behind" />,
+    'directional-graphs': currentDevice ? (
+      <DirectionalGraphs
+        deviceId={currentDevice}
+        left={deviceUp}
+        right={deviceDown}
+        up={deviceLeft}
+        down={deviceRight}
+        points={32}
+      />
+    ) : null,
     'fft-graph': (
       <div className="col-span-12">
         <FFTGraph samples={fftSamples} bins={128} />
@@ -145,7 +185,14 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
       </div>
 
       <div className="mt-6 text-sm text-slate-500">
-        <strong>Notes:</strong> The page expects the MCU to stream interleaved 16‑bit PCM (L,R) by default. If your device uses a different format, update the parser in <code>useBLE</code> (see <code>src/hooks/useBLE.tsx</code>).
+        <strong>Multi-Device Notes:</strong>
+        <ul className="list-disc list-inside mt-2 space-y-1">
+          <li>Click "Add Device" to connect multiple BLE microcontrollers.</li>
+          <li>Select a device from the list to view its data and control it.</li>
+          <li>The directional graphs show Left/Right (X-axis) and Up/Down (Y-axis) motion data.</li>
+          <li>Each device can stream up to 4 channels: left, right, up, down (minimum 8 bytes of float data per update).</li>
+          <li>Update your MCU firmware to send 4 floats (16 bytes) in this order: left, right, up, down.</li>
+        </ul>
       </div>
     </>
   );

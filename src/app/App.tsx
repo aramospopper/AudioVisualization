@@ -78,9 +78,9 @@ function App() {
         element={
           <ProtectedRoute>
             <DefaultLayout
-              bleConnected={bleHook.connected}
-              onBleConnect={() => bleHook.connect().catch(() => {})}
-              onBleDisconnect={() => bleHook.disconnect().catch(() => {})}
+              connectedDevices={bleHook.connectedDevices}
+              onPairLR={() => bleHook.connect('lr').catch(() => {})}
+              onPairUD={() => bleHook.connect('ud').catch(() => {})}
             >
               <Routes>
                 <Route

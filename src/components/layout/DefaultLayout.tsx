@@ -4,10 +4,10 @@ import Sidebar from './Sidebar/index';
 
 const DefaultLayout: React.FC<{ 
   children: ReactNode;
-  bleConnected?: boolean;
-  onBleConnect?: () => void;
-  onBleDisconnect?: () => void;
-}> = ({ children, bleConnected, onBleConnect, onBleDisconnect }) => {
+  connectedDevices?: Array<{ id: string; type: string }>;
+  onPairLR?: () => void;
+  onPairUD?: () => void;
+}> = ({ children, connectedDevices, onPairLR, onPairUD }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -24,9 +24,9 @@ const DefaultLayout: React.FC<{
           <Header 
             sidebarOpen={sidebarOpen} 
             setSidebarOpen={setSidebarOpen}
-            connected={bleConnected}
-            onConnect={onBleConnect}
-            onDisconnect={onBleDisconnect}
+            connectedDevices={connectedDevices}
+            onPairLR={onPairLR}
+            onPairUD={onPairUD}
           />
           {/* <!-- ===== Header End ===== --> */}
 

@@ -6,9 +6,12 @@ interface Props {
   right?: number[];
   points?: number; // number of points to show
   sampleRate?: number; // sample rate in Hz (default 1000 Hz)
+  label?: string; // label for the chart (default "L / R")
+  leftLabel?: string; // label for left channel
+  rightLabel?: string; // label for right channel
 }
 
-const LiveWave: React.FC<Props> = ({ left, right, points = 512, sampleRate = 1000 }) => {
+const LiveWave: React.FC<Props> = ({ left, right, points = 512, sampleRate = 1000, label = 'L / R', leftLabel = 'Left', rightLabel = 'Right' }) => {
   const [series, setSeries] = useState<any[]>([
     { name: 'Left', data: [] },
     { name: 'Right', data: [] },
@@ -34,8 +37,8 @@ const LiveWave: React.FC<Props> = ({ left, right, points = 512, sampleRate = 100
     setYMax(Math.max(10, newMax)); // minimum of 10
     
     const newSeries = [
-      { name: 'Left', data: l },
-      { name: 'Right', data: r.length ? r : [] },
+      { name: leftLabel, data: l },
+      { name: rightLabel, data: r.length ? r : [] },
     ];
     
     console.log("Setting series - Left points:", l.length, "Right points:", r.length, "Y-axis max:", Math.max(10, newMax));
@@ -74,7 +77,7 @@ const LiveWave: React.FC<Props> = ({ left, right, points = 512, sampleRate = 100
   return (
     <div className="col-span-12 bg-white dark:bg-boxdark p-4 rounded-md shadow-sm">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-medium">Live Waveform (L / R)</h3>
+        <h3 className="font-medium">Live Waveform ({label})</h3>
         <div className="text-sm text-slate-500">Real-time (max: {yMax})</div>
       </div>
       <div>
