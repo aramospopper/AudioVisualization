@@ -120,8 +120,8 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
         />
       </div>
     ),
-    'live-wave': <LiveWave left={deviceLeft} right={deviceRight} points={32} label="L / R" leftLabel="Left" rightLabel="Right" />,
-    'live-wave-ud': <LiveWave left={deviceUp} right={deviceDown} points={32} label="U / B" leftLabel="Up" rightLabel="Behind" />,
+    'live-wave': <LiveWave left={deviceLeft} right={deviceRight} points={32} label="Left / Up" leftLabel="Left" rightLabel="Up" />,
+    'live-wave-ud': <LiveWave left={deviceUp} right={deviceDown} points={32} label="Right / Behind" leftLabel="Right" rightLabel="Behind" />,
     'directional-graphs': currentDevice ? (
       <DirectionalGraphs
         deviceId={currentDevice}

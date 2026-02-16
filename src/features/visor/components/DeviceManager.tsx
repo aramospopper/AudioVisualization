@@ -31,7 +31,7 @@ const DeviceManager: React.FC<DeviceManagerProps> = ({
       {/* Device List */}
       {connectedDevices.length === 0 ? (
         <div className="text-sm text-slate-500 p-3 bg-slate-50 dark:bg-slate-900 rounded">
-          No devices paired. Use the "Pair L/R" or "Pair Up/Behind" buttons in the top bar to add devices.
+          No devices paired. Use the "Pair Left/Up" or "Pair Right/Behind" buttons in the top bar to add devices.
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
