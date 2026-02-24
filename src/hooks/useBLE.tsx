@@ -163,9 +163,12 @@ export function useBLE(opts?: {
     try {
       if (!(navigator as any).bluetooth) throw new Error('Web Bluetooth API not available');
       const device = await (navigator as any).bluetooth.requestDevice({
-        // if you know the serviceUuid, set filters here instead of acceptAllDevices
-        acceptAllDevices: true,
-        optionalServices: serviceUuid ? [serviceUuid] : undefined,
+        filters: [
+          { name: 'ItsyBitsy_RB' },
+          { name: 'ItsyBitsy_LU' },
+          { namePrefix: 'ItsyBitsy' },  // Fallback in case of slight name variations
+        ],
+        optionalServices: [serviceUuid],
       });
       
       const deviceId = device.id || `device-${Date.now()}`;
