@@ -239,15 +239,15 @@ export function useBLE(opts?: {
         // Disconnect specific device
         const state = devicesRef.current.get(deviceId);
         if (state) {
-          state.char?.removeEventListener('characteristicvaluechanged', (ev: Event) => handleNotification(deviceId, ev) as EventListener);
+          // Note: Cannot reliably remove event listener without stored reference
+          // The listener will be cleaned up when device disconnects
           if (state.device?.gatt?.connected) await state.device.gatt.disconnect();
           devicesRef.current.delete(deviceId);
-          setConnectedDevices((prev) => prev.filter((d) => d !== deviceId));
+          setConnectedDevices((prev) => prev.filter((d) => d.id !== deviceId));
         }
       } else {
         // Disconnect all devices
         for (const [id, state] of devicesRef.current.entries()) {
-          state.char?.removeEventListener('characteristicvaluechanged', (ev: Event) => handleNotification(id, ev) as EventListener);
           if (state.device?.gatt?.connected) await state.device.gatt.disconnect();
         }
         devicesRef.current.clear();

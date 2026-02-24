@@ -85,14 +85,11 @@ export const apiService = {
   },
 
   async updateProfile(token: string, updates: Partial<User>): Promise<User> {
-    const { data, error } = await supabase.auth.updateUser(
-      {
-        data: {
-          full_name: updates.name,
-        },
+    const { data, error } = await supabase.auth.updateUser({
+      data: {
+        full_name: updates.name,
       },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    });
 
     if (error || !data.user) {
       throw new Error('Failed to update profile');
