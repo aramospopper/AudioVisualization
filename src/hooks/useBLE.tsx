@@ -62,50 +62,32 @@ export function useBLE(opts?: {
 
   const binaryFloatParser: ParserFn = (dv) => {
 	console.log("Raw DataView bytes:", dv.byteLength);
-	console.log("Hex dump:", Array.from(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength))
-	  .map(b => b.toString(16).padStart(2, '0')).join(' '));
+	const bytes = Array.from(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength));
+	console.log("Hex dump:", bytes.map(b => b.toString(16).padStart(2, '0')).join(' '));
 	
-	// Check if we have at least 8 bytes (2 floats * 4 bytes)
-	if (dv.byteLength < 8) {
-	  console.warn("Insufficient data - expected 8+ bytes, got:", dv.byteLength);
-	  return null;
-	}
-  
 	try {
-	  // Read the first 4 bytes as a float
-	  const magL = dv.getFloat32(0, true); // true = Little Endian
-	  // Read the next 4 bytes (starting at offset 4)
-	  const magR = dv.getFloat32(4, true);
+	  // The device sends ASCII text numbers, not binary floats
+	  // Convert bytes to string
+	  const text = new TextDecoder().decode(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength));
+	  console.log("Decoded text:", text);
 	  
-	  // Optional: read up/down if available (8 more bytes)
-	  let magUp = 0, magDown = 0;
-	  if (dv.byteLength >= 16) {
-		magUp = dv.getFloat32(8, true);
-		magDown = dv.getFloat32(12, true);
+	  // Parse the text as a number
+	  const value = parseFloat(text.trim());
+	  
+	  if (isNaN(value)) {
+		console.warn("Could not parse text as number:", text);
+		return null;
 	  }
 	  
-	  // Normalize the values - divide by 10 to scale from ~6-9 range to ~0.6-0.9
-	  const normalizedL = magL / 10;
-	  const normalizedR = magR / 10;
-	  const normalizedUp = magUp / 10;
-	  const normalizedDown = magDown / 10;
+	  console.log("Parsed value:", value);
 	  
-	  console.log("Parsed floats - L:", magL, "R:", magR, "Up:", magUp, "Down:", magDown);
-  
-	  const result: DirectionalData = { 
-		left: [normalizedL], 
-		right: [normalizedR]
+	  // Return the value (already in the right scale)
+	  return { 
+		left: [value], 
+		right: [value] 
 	  };
-	  
-	  // Add up/down if they were parsed
-	  if (dv.byteLength >= 16) {
-		result.up = [normalizedUp];
-		result.down = [normalizedDown];
-	  }
-	  
-	  return result;
 	} catch (e) {
-	  console.error("Binary parse error:", e);
+	  console.error("Parse error:", e);
 	  return null;
 	}
   };
@@ -210,9 +192,12 @@ export function useBLE(opts?: {
         ? await service.getCharacteristic(characteristicUuid)
         : await service.getCharacteristics().then((c: any) => c[0]);
       
+      console.log(`[${deviceId}] Starting notifications on characteristic:`, characteristic.uuid);
       await characteristic.startNotifications();
+      console.log(`[${deviceId}] Notifications started successfully`);
       const boundHandler = (ev: Event) => handleNotification(deviceId, ev);
       characteristic.addEventListener('characteristicvaluechanged', boundHandler as EventListener);
+      console.log(`[${deviceId}] Event listener attached`);
       
       // Get write characteristic (may be different from read)
       const writeCharacteristic = writeCharacteristicUuid && writeCharacteristicUuid !== characteristicUuid
