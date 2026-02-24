@@ -64,18 +64,29 @@ export function useBLE(opts?: {
 	console.log("Raw DataView bytes:", dv.byteLength);
 	const bytes = Array.from(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength));
 	console.log("Hex dump:", bytes.map(b => b.toString(16).padStart(2, '0')).join(' '));
+	console.log("As ASCII:", bytes.map(b => String.fromCharCode(b)).join(''));
 	
 	try {
 	  // The device sends ASCII text numbers, not binary floats
 	  // Convert bytes to string
 	  const text = new TextDecoder().decode(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength));
-	  console.log("Decoded text:", text);
+	  console.log("Decoded text:", JSON.stringify(text), "length:", text.length);
 	  
 	  // Parse the text as a number
-	  const value = parseFloat(text.trim());
+	  const trimmed = text.trim();
+	  console.log("After trim:", JSON.stringify(trimmed));
+	  const value = parseFloat(trimmed);
 	  
 	  if (isNaN(value)) {
-		console.warn("Could not parse text as number:", text);
+		console.warn("Could not parse text as number. Text:", JSON.stringify(text), "Trimmed:", JSON.stringify(trimmed));
+		// Try to extract just digits and decimal point
+		const cleaned = text.replace(/[^\d.-]/g, '');
+		console.log("Cleaned text:", JSON.stringify(cleaned));
+		const cleanedValue = parseFloat(cleaned);
+		if (!isNaN(cleanedValue)) {
+		  console.log("Parsed cleaned value:", cleanedValue);
+		  return { left: [cleanedValue], right: [cleanedValue] };
+		}
 		return null;
 	  }
 	  
