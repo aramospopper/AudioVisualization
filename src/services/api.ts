@@ -3,6 +3,14 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+console.log('Environment check:', {
+  hasUrl: !!supabaseUrl,
+  hasKey: !!supabaseAnonKey,
+  url: supabaseUrl,
+  keyLength: supabaseAnonKey?.length,
+  keyPreview: supabaseAnonKey?.substring(0, 20) + '...'
+});
+
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
     'Missing Supabase credentials. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local'
@@ -24,50 +32,72 @@ export interface LoginResponse {
 
 export const apiService = {
   async login(email: string, password: string): Promise<LoginResponse> {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      console.log('Attempting login with Supabase URL:', supabaseUrl);
+      console.log('Login attempt for email:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      throw new Error(error.message);
+      console.log('Supabase response:', { data, error });
+
+      if (error) {
+        console.error('Supabase auth error:', error);
+        throw new Error(error.message);
+      }
+
+      if (!data.user || !data.session) {
+        throw new Error('Login failed - no session returned');
+      }
+
+      console.log('Login successful!');
+      return {
+        user: {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: data.user.user_metadata?.full_name || 'User',
+        },
+        token: data.session.access_token,
+      };
+    } catch (error) {
+      console.error('Login catch block error:', error);
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Cannot connect to authentication server. Please check your internet connection or verify the Supabase URL is correct.');
+      }
+      throw error;
     }
-
-    if (!data.user || !data.session) {
-      throw new Error('Login failed - no session returned');
-    }
-
-    return {
-      user: {
-        id: data.user.id,
-        email: data.user.email || '',
-        name: data.user.user_metadata?.full_name || 'User',
-      },
-      token: data.session.access_token,
-    };
   },
 
   async register(email: string, password: string, name?: string): Promise<LoginResponse> {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: name,
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: name,
+          },
         },
-      },
-    });
+      });
 
-    if (error) {
-      throw new Error(error.message);
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!data.user) {
+        throw new Error('Registration failed');
+      }
+
+      // Auto-login after signup
+      return this.login(email, password);
+    } catch (error) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        throw new Error('Cannot connect to authentication server. Please check your internet connection or verify the Supabase URL is correct.');
+      }
+      throw error;
     }
-
-    if (!data.user) {
-      throw new Error('Registration failed');
-    }
-
-    // Auto-login after signup
-    return this.login(email, password);
   },
 
   async getMe(token: string): Promise<User> {
