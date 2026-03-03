@@ -21,7 +21,7 @@ const DeviceManager: React.FC<DeviceManagerProps> = ({
   onDisconnect,
 }) => {
   const getDeviceTypeLabel = (type: DeviceType) => {
-    return type === 'lr' ? 'L/R' : 'Up/Behind';
+    return type === 'lr' ? 'Left/Up' : 'Right/Behind';
   };
 
   return (
@@ -47,14 +47,11 @@ const DeviceManager: React.FC<DeviceManagerProps> = ({
             >
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium truncate">{device.id}</span>
-                  <span className={`text-xs font-semibold ${
-                    device.type === 'lr' ? 'text-teal-600' : 'text-amber-600'
-                  }`}>
-                    {getDeviceTypeLabel(device.type)}
-                  </span>
-                </div>
+                <span className={`text-sm font-semibold ${
+                  device.type === 'lr' ? 'text-teal-600' : 'text-amber-600'
+                }`}>
+                  {getDeviceTypeLabel(device.type)}
+                </span>
               </div>
               <button
                 onClick={(e) => {

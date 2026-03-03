@@ -31,12 +31,12 @@ const Controls: React.FC<Props> = ({ sensitivity, setSensitivity, ledBrightness,
           <input
             type="range"
             min={0}
-            max={255}
+            max={100}
             value={ledBrightness}
             onChange={(e) => setLedBrightness(Number(e.target.value))}
             className="w-full"
           />
-          <div className="text-sm text-slate-500 mt-2">{ledBrightness} / 255</div>
+          <div className="text-sm text-slate-500 mt-2">{ledBrightness}% — limits max brightness to preserve battery</div>
         </div>
       </div>
     </div>

@@ -19,9 +19,7 @@ const LiveWave: React.FC<Props> = ({ left, right, points = 512, sampleRate = 100
   const [yMax, setYMax] = useState<number>(10);
 
   useEffect(() => {
-    console.log("LiveWave received - left:", left?.length, "right:", right?.length);
     if (!left || left.length === 0) {
-      console.log("No data yet");
       return;
     }
     
@@ -41,9 +39,8 @@ const LiveWave: React.FC<Props> = ({ left, right, points = 512, sampleRate = 100
       { name: rightLabel, data: r.length ? r : [] },
     ];
     
-    console.log("Setting series - Left points:", l.length, "Right points:", r.length, "Y-axis max:", Math.max(10, newMax));
     setSeries(newSeries);
-  }, [left, right, points]);
+  }, [left, right, points, leftLabel, rightLabel]);
 
   const opts = useMemo(() => ({
     chart: { 

@@ -61,44 +61,43 @@ export function useBLE(opts?: {
 //   };
 
   const binaryFloatParser: ParserFn = (dv) => {
-	console.log("Raw DataView bytes:", dv.byteLength);
-	const bytes = Array.from(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength));
-	console.log("Hex dump:", bytes.map(b => b.toString(16).padStart(2, '0')).join(' '));
-	console.log("As ASCII:", bytes.map(b => String.fromCharCode(b)).join(''));
-	
 	try {
-	  // The device sends ASCII text numbers, not binary floats
-	  // Convert bytes to string
+	  // The device sends ASCII text numbers
 	  const text = new TextDecoder().decode(new Uint8Array(dv.buffer, dv.byteOffset, dv.byteLength));
-	  console.log("Decoded text:", JSON.stringify(text), "length:", text.length);
 	  
-	  // Parse the text as a number
-	  const trimmed = text.trim();
-	  console.log("After trim:", JSON.stringify(trimmed));
-	  const value = parseFloat(trimmed);
-	  
-	  if (isNaN(value)) {
-		console.warn("Could not parse text as number. Text:", JSON.stringify(text), "Trimmed:", JSON.stringify(trimmed));
-		// Try to extract just digits and decimal point
-		const cleaned = text.replace(/[^\d.-]/g, '');
-		console.log("Cleaned text:", JSON.stringify(cleaned));
-		const cleanedValue = parseFloat(cleaned);
-		if (!isNaN(cleanedValue)) {
-		  console.log("Parsed cleaned value:", cleanedValue);
-		  return { left: [cleanedValue], right: [cleanedValue] };
-		}
+	  // Skip if text contains non-printable or invalid characters
+	  if (/[\x00-\x1F\x7F-\xFF]/.test(text)) {
 		return null;
 	  }
 	  
-	  console.log("Parsed value:", value);
+	  const trimmed = text.trim();
 	  
-	  // Return the value (already in the right scale)
+	  // Check if it's comma-separated (stereo: "magL,magR")
+	  if (trimmed.includes(',')) {
+		const parts = trimmed.split(',');
+		if (parts.length >= 2) {
+		  const left = parseFloat(parts[0]);
+		  const right = parseFloat(parts[1]);
+		  
+		  if (isFinite(left) && isFinite(right)) {
+			return { left: [left], right: [right] };
+		  }
+		}
+	  }
+	  
+	  // Single value (mono)
+	  const value = parseFloat(trimmed);
+	  
+	  if (!isFinite(value)) {
+		return null;
+	  }
+	  
+	  // Return same value for both channels if mono
 	  return { 
 		left: [value], 
 		right: [value] 
 	  };
 	} catch (e) {
-	  console.error("Parse error:", e);
 	  return null;
 	}
   };
@@ -115,25 +114,48 @@ export function useBLE(opts?: {
       if (onRaw.current) onRaw.current(deviceId, dv);
       const parsed = _parser(dv);
       if (!parsed) {
-        console.warn("Parser returned null");
+        // Don't log every null - it's expected for garbage data
         return;
       }
-      console.log(`[${deviceId}] Parsed data:`, parsed);
       
-      if (parsed.left) {
-        setLastLeft((prev) => {
-          const updated = [...(prev[deviceId] || []), ...parsed.left!].slice(-bufferSize);
-          console.log(`[${deviceId}] Updated left samples:`, updated.length);
-          return { ...prev, [deviceId]: updated };
-        });
+      // Get device type to know which channels to update
+      const deviceState = devicesRef.current.get(deviceId);
+      const deviceType = deviceState?.type || 'lr';
+      
+      console.log(`[${deviceId}] ✓ Valid data for ${deviceType}:`, parsed);
+      
+      // Route data based on device type
+      if (deviceType === 'lr') {
+        // L/R device: use left and right channels
+        if (parsed.left) {
+          setLastLeft((prev) => {
+            const updated = [...(prev[deviceId] || []), ...parsed.left!].slice(-bufferSize);
+            return { ...prev, [deviceId]: updated };
+          });
+        }
+        if (parsed.right) {
+          setLastRight((prev) => {
+            const updated = [...(prev[deviceId] || []), ...parsed.right!].slice(-bufferSize);
+            return { ...prev, [deviceId]: updated };
+          });
+        }
+      } else {
+        // U/D device: put data into up and down channels instead
+        if (parsed.left) {
+          setLastUp((prev) => {
+            const updated = [...(prev[deviceId] || []), ...parsed.left!].slice(-bufferSize);
+            return { ...prev, [deviceId]: updated };
+          });
+        }
+        if (parsed.right) {
+          setLastDown((prev) => {
+            const updated = [...(prev[deviceId] || []), ...parsed.right!].slice(-bufferSize);
+            return { ...prev, [deviceId]: updated };
+          });
+        }
       }
-      if (parsed.right) {
-        setLastRight((prev) => {
-          const updated = [...(prev[deviceId] || []), ...parsed.right!].slice(-bufferSize);
-          console.log(`[${deviceId}] Updated right samples:`, updated.length);
-          return { ...prev, [deviceId]: updated };
-        });
-      }
+      
+      // Also handle if parser explicitly provides up/down (for future 4-channel support)
       if (parsed.up) {
         setLastUp((prev) => {
           const updated = [...(prev[deviceId] || []), ...parsed.up!].slice(-bufferSize);
