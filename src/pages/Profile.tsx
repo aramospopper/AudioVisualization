@@ -13,7 +13,7 @@ const Profile = () => {
   const [profiles, setProfiles] = useState<AudioProfile[]>(() => {
     const saved = localStorage.getItem('audio-profiles');
     return saved ? JSON.parse(saved) : [
-      { id: '1', name: 'Default', sensitivity: 50, ledBrightness: 128, createdAt: Date.now() }
+      { id: '1', name: 'Default', sensitivity: 50, ledBrightness: 50, createdAt: Date.now() }
     ];
   });
 
@@ -27,7 +27,7 @@ const Profile = () => {
   // Form state
   const [formName, setFormName] = useState('');
   const [formSensitivity, setFormSensitivity] = useState(50);
-  const [formLedBrightness, setFormLedBrightness] = useState(128);
+  const [formLedBrightness, setFormLedBrightness] = useState(50);
 
   useEffect(() => {
     localStorage.setItem('audio-profiles', JSON.stringify(profiles));
@@ -54,7 +54,7 @@ const Profile = () => {
     setProfiles([...profiles, newProfile]);
     setFormName('');
     setFormSensitivity(50);
-    setFormLedBrightness(128);
+    setFormLedBrightness(50);
     setShowCreateForm(false);
   };
 
@@ -72,7 +72,7 @@ const Profile = () => {
     setEditingProfile(null);
     setFormName('');
     setFormSensitivity(50);
-    setFormLedBrightness(128);
+    setFormLedBrightness(50);
   };
 
   const handleDeleteProfile = (id: string) => {
@@ -115,7 +115,7 @@ const Profile = () => {
     setShowCreateForm(false);
     setFormName('');
     setFormSensitivity(50);
-    setFormLedBrightness(128);
+    setFormLedBrightness(50);
   };
 
   const activeProfile = profiles.find(p => p.id === activeProfileId);
@@ -149,11 +149,11 @@ const Profile = () => {
                 <div className="grid grid-cols-2 gap-4 mt-6">
                   <div className="rounded-lg border border-stroke bg-gray p-4 dark:border-strokedark dark:bg-meta-4">
                     <p className="text-sm text-bodydark mb-1">Sensitivity</p>
-                    <p className="text-2xl font-bold text-black dark:text-white">{activeProfile.sensitivity}</p>
+                    <p className="text-2xl font-bold text-black dark:text-white">{activeProfile.sensitivity}%</p>
                   </div>
                   <div className="rounded-lg border border-stroke bg-gray p-4 dark:border-strokedark dark:bg-meta-4">
                     <p className="text-sm text-bodydark mb-1">LED Brightness</p>
-                    <p className="text-2xl font-bold text-black dark:text-white">{activeProfile.ledBrightness}</p>
+                    <p className="text-2xl font-bold text-black dark:text-white">{activeProfile.ledBrightness}%</p>
                   </div>
                 </div>
               </div>
@@ -203,7 +203,7 @@ const Profile = () => {
                   </div>
                   <div>
                     <label className="mb-2.5 block text-black dark:text-white">
-                      Sensitivity: {formSensitivity}
+                      Sensitivity: {formSensitivity}%
                     </label>
                     <input
                       type="range"
@@ -216,12 +216,12 @@ const Profile = () => {
                   </div>
                   <div>
                     <label className="mb-2.5 block text-black dark:text-white">
-                      LED Brightness: {formLedBrightness}
+                      LED Brightness: {formLedBrightness}%
                     </label>
                     <input
                       type="range"
                       min="0"
-                      max="255"
+                      max="100"
                       value={formLedBrightness}
                       onChange={(e) => setFormLedBrightness(Number(e.target.value))}
                       className="w-full"
@@ -269,11 +269,11 @@ const Profile = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-bodydark">Sensitivity:</span>
-                      <span className="font-medium text-black dark:text-white">{profile.sensitivity}</span>
+                      <span className="font-medium text-black dark:text-white">{profile.sensitivity}%</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-bodydark">LED Brightness:</span>
-                      <span className="font-medium text-black dark:text-white">{profile.ledBrightness}</span>
+                      <span className="font-medium text-black dark:text-white">{profile.ledBrightness}%</span>
                     </div>
                   </div>
                   <div className="flex gap-2">
