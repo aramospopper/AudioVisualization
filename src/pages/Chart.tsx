@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Breadcrumb from '../components/ui/Breadcrumbs/Breadcrumb';
 import LiveWave from '../features/visor/components/LiveWave';
-import FFTGraph from '../features/visor/components/FFTGraph';
 import Controls from '../features/visor/components/Controls';
 import DirectionalGraphs from '../features/visor/components/DirectionalGraphs';
 import DeviceManager from '../features/visor/components/DeviceManager';
@@ -40,9 +39,8 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
       { id: 'device-manager', name: 'Device Manager', position: 0 },
       { id: 'live-wave', name: 'Live Waveform (L/R)', position: 1 },
       { id: 'live-wave-ud', name: 'Live Waveform (Up/Down)', position: 2 },
-      { id: 'fft-graph', name: 'FFT Graph', position: 3 },
-      { id: 'stats', name: 'Statistics', position: 4 },
-      { id: 'controls', name: 'Controls', position: 5 },
+      { id: 'stats', name: 'Audio Statistics', position: 3 },
+      { id: 'controls', name: 'Controls', position: 4 },
     ];
   });
 
@@ -74,21 +72,25 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
   
   const currentDevice = selectedDevice || lrDevice?.id || udDevice?.id;
 
-  // derive a single-channel view for FFT (use left if available)
-  const fftSamples = useMemo(() => (deviceLeft && deviceLeft.length ? deviceLeft : deviceRight || []), [deviceLeft, deviceRight]);
-
-  // compute RMS from recent samples and push into rolling buffer
+  // compute RMS from recent samples across ALL 4 mics and push into rolling buffer
   useEffect(() => {
-    const arr = deviceLeft && deviceLeft.length ? deviceLeft : deviceRight;
-    if (!arr || !arr.length) return;
+    // Combine all available microphone data
+    const allSamples: number[] = [];
+    if (deviceLeft && deviceLeft.length) allSamples.push(...deviceLeft);
+    if (deviceRight && deviceRight.length) allSamples.push(...deviceRight);
+    if (deviceUp && deviceUp.length) allSamples.push(...deviceUp);
+    if (deviceDown && deviceDown.length) allSamples.push(...deviceDown);
+    
+    if (allSamples.length === 0) return;
+    
     // apply sensitivity (simple scale)
     const scale = Math.max(0.001, sensitivity / 50); // default ~1
-    const scaled = arr.map((v) => v * scale);
+    const scaled = allSamples.map((v) => v * scale);
     const rms = Math.sqrt(scaled.reduce((s, x) => s + x * x, 0) / scaled.length) || 0;
     setLatestRms(rms);
     // store raw RMS (not dB) — conversion shown in UI
     rolling.push(rms);
-  }, [deviceLeft, deviceRight, sensitivity, rolling]);
+  }, [deviceLeft, deviceRight, deviceUp, deviceDown, sensitivity, rolling]);
 
   const avgRms = rolling.average();
   const rmsToDb = (r: number) => (r <= 0 ? -Infinity : 20 * Math.log10(r));
@@ -153,24 +155,40 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
             points={32}
           />
         ) : null;
-      case 'fft-graph':
-        return (
-          <div className="col-span-12">
-            <FFTGraph samples={fftSamples} bins={128} />
-          </div>
-        );
       case 'stats':
         return (
-          <div className="col-span-12 bg-white dark:bg-boxdark p-4 rounded-md shadow-sm">
-            <h3 className="font-medium mb-3">Noise (10 min average)</h3>
-            <div className="flex items-end gap-6">
-              <div>
-                <div className="text-4xl font-semibold">{(rmsToDb(avgRms) || -Infinity).toFixed(1)} dB</div>
-                <div className="text-sm text-slate-500">average (last 10 minutes)</div>
+          <div className="col-span-12 bg-white dark:bg-boxdark rounded-md shadow-sm">
+            <div className="border-b border-stroke px-6 py-4 dark:border-strokedark">
+              <h3 className="font-semibold text-black dark:text-white">Audio Statistics</h3>
+              <p className="text-sm text-bodydark mt-1">Real-time and historical noise measurements from all 4 microphones</p>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="rounded-lg border border-stroke p-5 dark:border-strokedark">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-bodydark">10 Minute Average</span>
+                    <svg className="fill-primary" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 0C4.477 0 0 4.477 0 10s4.477 10 10 10 10-4.477 10-10S15.523 0 10 0zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8 8 3.589 8 8-3.589 8-8 8zm1-13H9v6l5.25 3.15.75-1.23-4-2.37V5z"/>
+                    </svg>
+                  </div>
+                  <div className="text-4xl font-bold text-black dark:text-white mb-1">
+                    {isFinite(rmsToDb(avgRms)) ? rmsToDb(avgRms).toFixed(1) : '--'} <span className="text-2xl">dB</span>
+                  </div>
+                  <p className="text-xs text-bodydark">Based on rolling 10-minute window</p>
+                </div>
+                
+                <div className="rounded-lg border border-stroke p-5 dark:border-strokedark">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-bodydark">Current Reading</span>
+                    <svg className="fill-success" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 20C4.477 20 0 15.523 0 10S4.477 0 10 0s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 100-16 8 8 0 000 16zm-1-5h2v2H9v-2zm0-8h2v6H9V5z"/>
+                    </svg>
+                  </div>
+                  <div className="text-4xl font-bold text-black dark:text-white mb-1">
+                    {isFinite(rmsToDb(latestRms)) ? rmsToDb(latestRms).toFixed(1) : '--'} <span className="text-2xl">dB</span>
+                  </div>
+                </div>
               </div>
-              <div className="text-2xl font-medium">Recent</div>
-              <div className="text-lg">RMS: {latestRms.toFixed(3)} — {rmsToDb(latestRms).toFixed(1)} dB</div>
-              <div className="text-sm text-slate-500">(RMS assumes samples normalized to ±1)</div>
             </div>
           </div>
         );
@@ -194,6 +212,15 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
     <>
       <Breadcrumb pageName="AudioVisor" />
 
+      <div className="mb-6 text-sm text-slate-500 bg-white dark:bg-boxdark p-4 rounded-md shadow-sm">
+        <strong>Getting Started:</strong>
+        <ul className="list-disc list-inside mt-2 space-y-1">
+          <li>Pair Up/Left mic and Right/Behind mic separately using the buttons in the top navigation bar.</li>
+          <li>View mic readings in real time via the Live Waveform graphs after the devices are connected.</li>
+          <li>Use the sliders to adjust mic sensitivity or LED brightness.</li>
+        </ul>
+      </div>
+
       <div className="grid grid-cols-12 gap-4 md:gap-6 2xl:gap-7.5">
         {sortedWidgets.map((widget) => (
           <React.Fragment key={widget.id}>
@@ -204,17 +231,6 @@ const Chart: React.FC<{ bleHook: ReturnType<typeof useBLE> }> = ({ bleHook }) =>
         {error ? (
           <div className="col-span-12 text-sm text-red-500">BLE: {error}</div>
         ) : null}
-      </div>
-
-      <div className="mt-6 text-sm text-slate-500">
-        <strong>Multi-Device Notes:</strong>
-        <ul className="list-disc list-inside mt-2 space-y-1">
-          <li>Click "Add Device" to connect multiple BLE microcontrollers.</li>
-          <li>Select a device from the list to view its data and control it.</li>
-          <li>The directional graphs show Left/Right (X-axis) and Up/Down (Y-axis) motion data.</li>
-          <li>Each device can stream up to 4 channels: left, right, up, down (minimum 8 bytes of float data per update).</li>
-          <li>Update your MCU firmware to send 4 floats (16 bytes) in this order: left, right, up, down.</li>
-        </ul>
       </div>
     </>
   );

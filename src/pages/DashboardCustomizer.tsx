@@ -12,9 +12,8 @@ const DashboardCustomizer = () => {
     { id: 'device-manager', name: 'Device Manager', position: 0 },
     { id: 'live-wave', name: 'Live Waveform (L/R)', position: 1 },
     { id: 'live-wave-ud', name: 'Live Waveform (U/B)', position: 2 },
-    { id: 'fft-graph', name: 'FFT Graph', position: 3 },
-    { id: 'stats', name: 'Statistics (Avg. From Last 10 Min)', position: 4 },
-    { id: 'controls', name: 'Controls', position: 5 },
+    { id: 'stats', name: 'Audio Statistics', position: 3 },
+    { id: 'controls', name: 'Controls', position: 4 },
   ];
 
   const [widgets, setWidgets] = useState<Widget[]>(() => {

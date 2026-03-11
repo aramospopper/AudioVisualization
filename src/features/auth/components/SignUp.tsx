@@ -9,6 +9,7 @@ const SignUp: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { register, user } = useAuth();
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ const SignUp: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess(false);
     setIsLoading(true);
 
     if (!name || !email || !password || !confirmPassword) {
@@ -48,6 +50,8 @@ const SignUp: React.FC = () => {
     
     if (!result.success) {
       setError(result.error || 'Signup failed');
+    } else {
+      setSuccess(true);
     }
   };
 
@@ -82,6 +86,14 @@ const SignUp: React.FC = () => {
               {error && (
                 <div className="mb-4 rounded-lg bg-danger bg-opacity-10 p-4 text-danger">
                   {error}
+                </div>
+              )}
+
+              {success && (
+                <div className="mb-4 rounded-lg bg-success bg-opacity-10 p-4 text-success">
+                  <strong>Account created successfully!</strong>
+                  <p className="mt-2">A confirmation email has been sent to <strong>{email}</strong>.</p>
+                  <p className="mt-1">Please check your inbox and click the confirmation link to activate your account.</p>
                 </div>
               )}
 
